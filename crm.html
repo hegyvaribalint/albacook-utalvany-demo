@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Al-Ba Cook CRM</title>
+<link rel="icon" href="img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- belépés -->
+<section id="login" class="login wrap">
+  <form id="lf" autocomplete="on">
+    <img src="img/logo-full.jpg" alt="Al-Ba Cook Főzőiskola" style="width:150px;margin:0 auto;border-radius:12px"><div class="lh" style="justify-content:center;text-align:center"><div><h1>CRM</h1><span class="muted small">Utalványok, rendelések, ügyfelek</span></div></div>
+    <div class="f"><label for="lu">Felhasználónév</label><input id="lu" autocomplete="username" required placeholder=" "></div>
+    <div class="f"><label for="lp">Jelszó</label><input id="lp" type="password" autocomplete="current-password" required placeholder=" "></div>
+    <button class="btn" type="submit">Belépés</button>
+    <span class="err" id="le"></span>
+  </form>
+</section>
+
+<!-- alkalmazás -->
+<div id="app" hidden>
+<header class="top">
+  <div class="wrap">
+    <span class="brand"><img src="img/logo-mark.png" alt="Al-Ba Cook logó"><span class="bt"><b>Al-Ba Cook CRM</b><span>Ajándékutalványok</span></span></span>
+    <span class="test-badge">Tesztüzem</span>
+    <a class="btn ghost small" href="./" target="_blank" rel="noopener" style="text-decoration:none">Utalványbolt</a>
+    <button class="btn ghost small" id="logout">Kijelentkezés</button>
+  </div>
+</header>
+<main class="wrap">
+  <nav class="crm-nav" role="tablist">
+    <button role="tab" data-v="home" aria-selected="true">Áttekintés</button>
+    <button role="tab" data-v="orders" aria-selected="false">Rendelések<span class="cnt" id="n-orders"></span></button>
+    <button role="tab" data-v="vouchers" aria-selected="false">Utalványok<span class="cnt" id="n-vouchers"></span></button>
+    <button role="tab" data-v="clients" aria-selected="false">Ügyfelek<span class="cnt" id="n-clients"></span></button>
+    <button role="tab" data-v="rem" aria-selected="false">Emlékeztetők</button>
+    <button role="tab" data-v="set" aria-selected="false">Beállítások</button>
+  </nav>
+
+  <section data-view="home">
+    <div class="kpis">
+      <div class="kpi"><div class="v" id="k-active">0</div><div class="l">aktív utalvány</div></div>
+      <div class="kpi"><div class="v" id="k-value">0 Ft</div><div class="l">beváltatlan érték</div></div>
+      <div class="kpi"><div class="v" id="k-month">0 Ft</div><div class="l">eladás ebben a hónapban</div></div>
+      <div class="kpi"><div class="v" id="k-wait">0</div><div class="l">átutalásra vár</div></div>
+    </div>
+    <div class="how" style="margin-top:16px">
+      <div class="panel" style="margin-top:0"><h3>Teendők</h3><div id="todo"></div></div>
+      <div class="panel" style="margin-top:0"><h3>Következő emlékeztetők</h3><div id="next-rem"></div></div>
+    </div>
+  </section>
+
+  <section data-view="orders" hidden>
+    <div class="toolbar"><div class="f"><label for="o-q">Keresés</label><input id="o-q" placeholder="név, e-mail, számlaszám"></div>
+      <div class="f"><label for="o-st">Állapot</label><select id="o-st"><option value="">Mind</option><option value="paid">Fizetve</option><option value="wait">Átutalásra vár</option><option value="failed">Sikertelen</option></select></div></div>
+    <div class="tablebox"><table><thead><tr><th>Rendelés</th><th>Dátum</th><th>Vásárló</th><th>Tételek</th><th class="num">Összeg</th><th>Fizetés</th><th>Kiállító</th><th>Számla</th><th>Állapot</th></tr></thead><tbody id="o-rows"></tbody></table></div>
+  </section>
+
+  <section data-view="vouchers" hidden>
+    <div class="toolbar"><div class="f"><label for="v-q">Keresés</label><input id="v-q" placeholder="sorszám, név"></div>
+      <div class="f"><label for="v-st">Állapot</label><select id="v-st"><option value="">Mind</option><option value="active">Aktív</option><option value="soon">Hamarosan lejár</option><option value="expired">Lejárt</option><option value="used">Beváltva</option></select></div></div>
+    <div class="tablebox"><table><thead><tr><th>Sorszám</th><th>Utalvány</th><th class="num">Érték</th><th>Vásárló</th><th>Megajándékozott</th><th>Vásárlás</th><th>Lejárat</th><th>Köv. emlékeztető</th><th>Állapot</th></tr></thead><tbody id="v-rows"></tbody></table></div>
+  </section>
+
+  <section data-view="clients" hidden>
+    <div class="toolbar"><div class="f"><label for="c-q">Keresés</label><input id="c-q" placeholder="név, e-mail"></div></div>
+    <div class="tablebox"><table><thead><tr><th>Név</th><th>E-mail</th><th>Telefon</th><th>Szerep</th><th class="num">Rendelés</th><th class="num">Költés</th><th class="num">Aktív utalvány</th><th>Utolsó</th></tr></thead><tbody id="c-rows"></tbody></table></div>
+  </section>
+
+  <section data-view="rem" hidden>
+    <p class="hint" style="margin-top:18px">A megajándékozott két emlékeztetőt kap: 2 hónappal a vásárlás után és a lejárat előtti hónap első napján. Beváltott utalványnál nem megy ki.</p>
+    <div class="tablebox"><table><thead><tr><th>Dátum</th><th>Címzett</th><th>Utalvány</th><th>Típus</th><th>Lejárat</th><th>Állapot</th></tr></thead><tbody id="r-rows"></tbody></table></div>
+  </section>
+
+  <section data-view="set" hidden>
+    <div class="panel"><h3>Dátum</h3><p class="hint">Teszteléshez: a lejáratok, emlékeztetők és hosszabbítási díjak ehhez a naphoz számolódnak.</p>
+      <div class="toolbar" style="margin:0"><div class="f"><label for="s-date">Mai nap</label><input id="s-date" type="date"></div><button class="btn ghost small" id="s-date-reset" style="align-self:end">Valós dátum</button></div></div>
+    <div class="panel"><h3>Tesztadatok</h3><p class="hint">Visszaállítja a mintarendeléseket, a bolt tesztvásárlásai törlődnek.</p><button class="btn ghost small" id="s-reset">Tesztadatok visszaállítása</button> <span id="s-msg" class="small muted"></span></div>
+  </section>
+</main>
+</div>
+
+<div class="drawer" id="drawer" hidden><div class="in" id="drawer-in"></div></div>
+
+<script src="app.js"></script>
+<script>
+const {P,ft,huDate,hm,expiryOf,reminders,extFee,esc,today,load,save,resetDB,completeOrder,emailHTML,drawVoucher,iso,parse}=AB;
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const AUTH="b5a9650a17f9eb1e259a231f863a27a2dab8318d742f33d7ece79df9d2b28046";
+let db=load(), TODAY=today();
+
+/* ---- belépés ---- */
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function authed(){try{return sessionStorage.getItem("albacook-auth")===AUTH}catch(e){return false}}
+function showApp(){ $("#login").hidden=true; $("#app").hidden=false; renderAll(); }
+$("#lf").addEventListener("submit",async e=>{e.preventDefault();
+  const h=await sha($("#lu").value.trim().toLowerCase()+":"+$("#lp").value);
+  if(h===AUTH){try{sessionStorage.setItem("albacook-auth",AUTH)}catch(e){} showApp();} else $("#le").textContent="Hibás felhasználónév vagy jelszó.";});
+$("#logout").onclick=()=>{try{sessionStorage.removeItem("albacook-auth")}catch(e){} location.reload()};
+
+/* ---- állapotok ---- */
+const V_LABEL={active:"Aktív",soon:"Hamarosan lejár",expired:"Lejárt",used:"Beváltva"};
+const O_LABEL={paid:"Fizetve",wait:"Átutalásra vár",failed:"Sikertelen"};
+const PAY={card:"Bankkártya",apple:"Apple Pay",google:"Google Pay",transfer:"Átutalás"};
+function vStatus(o,v){ if(v.status==="used")return "used"; const exp=expiryOf(o.buy); if(TODAY>exp)return "expired"; if((exp-TODAY)/864e5<=45)return "soon"; return "active"; }
+const allV=()=>db.orders.filter(o=>o.status==="paid").flatMap(o=>o.vouchers.map(v=>({o,v})));
+function nextRem(o,v){ if(vStatus(o,v)==="used"||vStatus(o,v)==="expired")return null; return reminders(o.buy).find(d=>d>=TODAY)||null; }
+const pill=(cls,txt)=>`<span class="pill ${cls}">${txt}</span>`;
+const oPill=o=>pill(o.status==="paid"?"active":o.status==="wait"?"wait":"expired",O_LABEL[o.status]);
+
+/* ---- nézetek ---- */
+function renderAll(){
+  db=load(); TODAY=today();
+  const live=allV().filter(x=>["active","soon"].includes(vStatus(x.o,x.v)));
+  $("#k-active").textContent=live.length; $("#k-value").textContent=ft(live.reduce((s,x)=>s+x.v.value,0));
+  const mStart=new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
+  $("#k-month").textContent=ft(db.orders.filter(o=>o.status==="paid"&&parse(o.buy)>=mStart&&parse(o.buy)<=TODAY).reduce((s,o)=>s+o.total,0));
+  const wait=db.orders.filter(o=>o.status==="wait"); $("#k-wait").textContent=wait.length;
+  $("#n-orders").textContent=db.orders.length; $("#n-vouchers").textContent=allV().length;
+  const soon=allV().filter(x=>vStatus(x.o,x.v)==="soon");
+  $("#todo").innerHTML=(wait.map(o=>`<div class="actions" style="margin:0 0 8px"><span>${pill("wait","Átutalás")} <b>${esc(o.cname)}</b> · ${ft(o.total)} · <span class="mono small">${esc(o.proforma)}</span></span><button class="btn ghost small" data-order="${o.id}">Megnyit</button></div>`).join("")
+    + soon.map(x=>`<div class="actions" style="margin:0 0 8px"><span>${pill("soon","Lejár")} <span class="mono small">${esc(x.v.serial)}</span> · ${esc(x.o.rname)} · ${huDate(expiryOf(x.o.buy))}</span><button class="btn ghost small" data-order="${x.o.id}">Megnyit</button></div>`).join(""))
+    || `<p class="hint">Nincs teendő.</p>`;
+  const rem=remList().filter(r=>r.date>=TODAY).slice(0,6);
+  $("#next-rem").innerHTML=rem.length?`<ul class="log">${rem.map(r=>`<li><span class="tm">${huDate(r.date).slice(5)}</span><span class="dot w"></span><span>${esc(r.o.rname)} · <span class="mono small">${esc(r.v.serial)}</span> · ${r.type}</span></li>`).join("")}</ul>`:`<p class="hint">Nincs ütemezett emlékeztető.</p>`;
+  renderOrders(); renderVouchers(); renderClients(); renderRem();
+  $("#s-date").value=iso(TODAY);
+}
+function renderOrders(){
+  const q=$("#o-q").value.trim().toLowerCase(), f=$("#o-st").value;
+  const rows=db.orders.filter(o=>(!f||o.status===f)&&(!q||[o.id,o.cname,o.cmail,o.invoice,o.proforma,o.rname].join(" ").toLowerCase().includes(q)));
+  $("#o-rows").innerHTML=rows.map(o=>`<tr class="click" data-order="${o.id}"><td class="mono">${o.id}</td><td class="mono">${huDate(o.created.slice(0,10))}</td><td>${esc(o.cname)}<div class="small muted">${esc(o.cmail)}</div></td>
+    <td>${o.items.map(i=>i.q+"× "+esc(P[i.pid].name)).join("<br>")}</td><td class="num">${ft(o.total)}</td><td>${PAY[o.pay]}</td><td>${esc(o.issuer)}</td><td class="mono">${esc(o.invoice||o.proforma||"–")}</td><td>${oPill(o)}</td></tr>`).join("")||`<tr><td colspan="9" class="muted">Nincs találat.</td></tr>`;
+}
+function renderVouchers(){
+  const q=$("#v-q").value.trim().toLowerCase(), f=$("#v-st").value;
+  const rows=allV().filter(x=>(!f||vStatus(x.o,x.v)===f)&&(!q||[x.v.serial,x.o.cname,x.o.rname,P[x.v.pid].name].join(" ").toLowerCase().includes(q)));
+  $("#v-rows").innerHTML=rows.map(({o,v})=>{const s=vStatus(o,v),nr=nextRem(o,v);return `<tr class="click" data-order="${o.id}"><td class="mono">${esc(v.serial)}</td><td>${esc(P[v.pid].name)}</td><td class="num">${ft(v.value)}</td><td>${esc(o.cname)}</td><td>${esc(o.rname)}<div class="small muted">${esc(o.rmail)}</div></td><td class="mono">${huDate(o.buy)}</td><td class="mono">${huDate(expiryOf(o.buy))}</td><td class="mono">${nr?huDate(nr):"–"}</td><td>${pill(s,V_LABEL[s])}</td></tr>`}).join("")||`<tr><td colspan="9" class="muted">Nincs találat.</td></tr>`;
+}
+function clients(){
+  const m={};
+  const add=(mail,name,phone,role,o,spend)=>{const k=(mail||"").toLowerCase(); if(!k)return; const c=m[k]||(m[k]={mail,name,phone:"",roles:new Set(),orders:new Set(),spend:0,active:0,last:o.created});
+    c.roles.add(role); if(phone)c.phone=phone; c.orders.add(o.id); c.spend+=spend; if(o.created>c.last)c.last=o.created;};
+  db.orders.forEach(o=>{ if(o.status==="failed")return; add(o.cmail,o.cname,o.cphone,"vásárló",o,o.status==="paid"?o.total:0); if(o.rmail.toLowerCase()!==o.cmail.toLowerCase())add(o.rmail,o.rname,"","megajándékozott",o,0);});
+  allV().forEach(({o,v})=>{const c=m[o.rmail.toLowerCase()]; if(c&&["active","soon"].includes(vStatus(o,v)))c.active++;});
+  return Object.values(m).sort((a,b)=>b.last.localeCompare(a.last));
+}
+function renderClients(){
+  const q=$("#c-q").value.trim().toLowerCase(), cs=clients(); $("#n-clients").textContent=cs.length;
+  $("#c-rows").innerHTML=cs.filter(c=>!q||(c.name+" "+c.mail).toLowerCase().includes(q)).map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.mail)}</td><td class="mono">${esc(c.phone||"–")}</td><td>${[...c.roles].join(", ")}</td><td class="num">${c.orders.size}</td><td class="num">${c.spend?ft(c.spend):"–"}</td><td class="num">${c.active||"–"}</td><td class="mono">${huDate(c.last.slice(0,10))}</td></tr>`).join("");
+}
+function remList(){
+  const out=[]; allV().forEach(({o,v})=>{ const [a,b]=reminders(o.buy); [[a,"2 hónapos emlékeztető"],[b,"lejárat előtti emlékeztető"]].forEach(([d,type])=>out.push({date:d,type,o,v})); });
+  return out.sort((x,y)=>x.date-y.date);
+}
+function renderRem(){
+  $("#r-rows").innerHTML=remList().map(r=>{const s=vStatus(r.o,r.v); let st;
+    if(s==="used")st=pill("used","Nem megy ki (beváltva)"); else if(r.date<TODAY)st=pill("active","Elküldve"); else st=pill("wait","Ütemezve");
+    return `<tr class="click" data-order="${r.o.id}"><td class="mono">${huDate(r.date)}</td><td>${esc(r.o.rname)}<div class="small muted">${esc(r.o.rmail)}</div></td><td class="mono">${esc(r.v.serial)}</td><td>${r.type}</td><td class="mono">${huDate(expiryOf(r.o.buy))}</td><td>${st}</td></tr>`}).join("");
+}
+
+/* ---- rendelés részletei ---- */
+async function openOrder(id){
+  const o=db.orders.find(x=>x.id===id); if(!o)return; const d=$("#drawer-in"); $("#drawer").hidden=false;
+  const head=`<div class="dh"><h2>${o.id}</h2>${oPill(o)}<button class="btn ghost small" id="d-close">Bezár</button></div>
+   <dl class="bank"><dt>Vásárló</dt><dd>${esc(o.cname)}${o.ctax?` · adószám ${esc(o.ctax)}`:""}</dd><dt>E-mail</dt><dd>${esc(o.cmail)}</dd><dt>Telefon</dt><dd>${esc(o.cphone||"–")}</dd><dt>Cím</dt><dd>${esc(o.caddr||"–")}</dd>
+   <dt>Megajándékozott</dt><dd>${esc(o.rname)}, ${esc(o.rmail)}${o.direct?" (neki is elküldve)":""}</dd>${o.msg?`<dt>Üzenet</dt><dd><i>${esc(o.msg)}</i></dd>`:""}
+   <dt>Fizetés</dt><dd>${PAY[o.pay]} · ${ft(o.total)}</dd><dt>Kiállító</dt><dd>${esc(o.issuer)}</dd><dt>Számla</dt><dd class="mono">${esc(o.invoice||"–")}${o.proforma?` (díjbekérő: ${esc(o.proforma)})`:""}</dd></dl>`;
+  let body="";
+  if(o.status==="wait") body=`<div class="panel"><h3>Átutalásra vár</h3><p class="hint">Ha megérkezett a pénz, a gomb kiállítja a számlát, legenerálja az utalványt és elküldi e-mailben.</p><button class="btn ok" id="d-paid">Megérkezett az utalás</button></div>`;
+  if(o.status==="paid") body=`<div class="sec-t">Utalványok</div><div class="vlist">${o.vouchers.map((v,i)=>{const s=vStatus(o,v),ex=extFee(expiryOf(o.buy),TODAY);
+     return `<div class="vrow"><img data-v="${i}" alt="utalvány ${esc(v.serial)}" src="${P[v.pid].img}"><div class="meta"><b class="mono">${esc(v.serial)}</b><span>${esc(P[v.pid].name)} · ${ft(v.value)}</span><span class="small muted">Lejárat: ${huDate(expiryOf(o.buy))}</span><span>${pill(s,V_LABEL[s])}</span>
+     ${s==="used"?`<span class="small muted">Beváltva: ${huDate(v.usedAt)}</span>`:`${ex.months?`<span class="small">Lejárt ${ex.months} megkezdett hónapja, hosszabbítás: <b>${ft(ex.fee)}</b></span>`:""}<div><button class="btn ok small" data-use="${i}">${ex.months?"Beváltás "+ft(ex.fee)+" díjjal":"Beváltás"}</button></div>`}</div></div>`}).join("")}</div>
+     <div class="sec-t">Elküldött e-mail</div>${emailHTML(o)}`;
+  body+=`<div class="sec-t">Automatizmus napló</div><ul class="log">${(o.log||[]).map(l=>`<li><span class="tm">${hm(l.t)}</span><span class="dot ${l.c}"></span><span>${l.h}</span></li>`).join("")||`<li><span class="tm"></span><span class="dot"></span><span class="muted">Korábbi rendelés, nincs napló.</span></li>`}</ul>`;
+  d.innerHTML=head+body;
+  $("#d-close").onclick=closeDrawer;
+  const pb=$("#d-paid"); if(pb)pb.onclick=async()=>{completeOrder(db,o,"transfer"); save(db); renderAll(); openOrder(o.id);};
+  $$("[data-use]").forEach(b=>b.onclick=()=>{const v=o.vouchers[+b.dataset.use]; const ex=extFee(expiryOf(o.buy),TODAY); v.status="used"; v.usedAt=iso(TODAY); if(ex.fee)v.extFee=ex.fee;
+    o.log=(o.log||[]).concat([{t:new Date().toISOString(),c:"",h:"<b>Beváltás:</b> "+esc(v.serial)+(ex.fee?" ("+ft(ex.fee)+" hosszabbítási díj)":"")}]); save(db); renderAll(); openOrder(o.id);});
+  if(o.status==="paid") for(const img of $$("img[data-v]")){const v=o.vouchers[+img.dataset.v]; img.src=await drawVoucher(v.pid,v.serial,expiryOf(o.buy));}
+}
+function closeDrawer(){$("#drawer").hidden=true}
+$("#drawer").addEventListener("click",e=>{if(e.target.id==="drawer")closeDrawer()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeDrawer()});
+document.addEventListener("click",e=>{const t=e.target.closest("[data-order]"); if(t&&!e.target.closest(".drawer"))openOrder(t.dataset.order)});
+
+/* ---- navigáció, szűrők, beállítások ---- */
+$$(".crm-nav button").forEach(b=>b.onclick=()=>{$$(".crm-nav button").forEach(x=>x.setAttribute("aria-selected",x===b));$$("[data-view]").forEach(s=>s.hidden=s.dataset.view!==b.dataset.v)});
+["#o-q","#o-st"].forEach(s=>$(s).addEventListener("input",renderOrders));
+["#v-q","#v-st"].forEach(s=>$(s).addEventListener("input",renderVouchers));
+$("#c-q").addEventListener("input",renderClients);
+$("#s-date").onchange=e=>{if(!e.target.value)return; try{sessionStorage.setItem("albacook-today",e.target.value)}catch(x){} renderAll()};
+$("#s-date-reset").onclick=()=>{try{sessionStorage.removeItem("albacook-today")}catch(x){} renderAll()};
+$("#s-reset").onclick=()=>{db=resetDB(); renderAll(); $("#s-msg").textContent="Visszaállítva.";};
+window.addEventListener("storage",e=>{if(e.key==="albacook-db-v1"&&authed())renderAll()});
+window.addEventListener("focus",()=>{if(authed())renderAll()});
+
+if(authed()) showApp();
+</script>
+</body>
+</html>
