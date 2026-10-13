@@ -69,6 +69,7 @@
           <div class="f"><label for="c-city" class="req">Település</label><input id="c-city" autocomplete="address-level2" placeholder="Székesfehérvár"></div>
           <div class="f full"><label for="c-addr" class="req">Utca, házszám</label><input id="c-addr" autocomplete="street-address" placeholder="Fő utca 1."></div>
           <label class="check full"><input type="checkbox" id="c-aszf"> <span>Elolvastam és elfogadom az <a href="feltetelek.html" target="_blank" style="color:var(--chalk)">utalvány felhasználási feltételeit</a>, az <a href="aszf.html" target="_blank" style="color:var(--chalk)">ÁSZF-et</a> és az <a href="adatkezeles.html" target="_blank" style="color:var(--chalk)">adatkezelési tájékoztatót</a>.</span></label>
+          <label class="check full"><input type="checkbox" id="c-news"> <span><b>Kérek hírlevelet:</b> elsőként értesülök az új tanfolyamokról, időpontokról és a feliratkozóknak szóló kedvezményekről. Nem kötelező, bármikor leiratkozhatok.</span></label>
         </div>
         <div class="actions"><button class="btn" id="go4">Tovább a fizetéshez</button><span class="err" id="e3"></span></div>
       </section>
@@ -180,7 +181,7 @@ function snapshot(){
     cname:$("#c-name").value.trim(), cmail:$("#c-mail").value.trim(), cphone:$("#c-phone").value.trim(), ctax:st.buyer==="ceg"?$("#c-tax").value.trim():"",
     caddr:$("#c-zip").value.trim()+" "+$("#c-city").value.trim()+", "+$("#c-addr").value.trim(),
     rname:self?$("#c-name").value.trim():$("#r-name").value.trim(), rmail:self?$("#c-mail").value.trim():$("#r-mail").value.trim(),
-    direct:!self&&$("#r-direct").checked, msg:$("#r-msg").value.trim(), pay:st.pay, log:[]};
+    direct:!self&&$("#r-direct").checked, newsletter:$("#c-news").checked, newsletterAt:$("#c-news").checked?new Date().toISOString():null, msg:$("#r-msg").value.trim(), pay:st.pay, log:[]};
 }
 function lock(){$$("#s1 button,#s2 input,#s2 textarea,#s3 input,#s3 button,.pay button,#paybox input,#paybox button").forEach(e=>e.disabled=true)}
 function pay(decline){
@@ -192,10 +193,9 @@ function pay(decline){
   },1300);
 }
 async function finish(){
-  const o=snapshot(); const db=o._db; delete o._db; completeOrder(db,o,"card"); db.orders.unshift(o); save(db); st.order=o; lock(); setStep(5);
-  $("#result").innerHTML=`<p class="muted"><span class="spinner"></span>Utalványok készülnek…</p>`;
-  for(const v of o.vouchers) v.url=await drawVoucher(v.pid,v.serial,expiryOf(o.buy));
-  showDone(o);
+  const o=snapshot(); const db=o._db; delete o._db; completeOrder(db,o,"card"); db.orders.unshift(o); save(db); st.order=o; lock();
+  try{sessionStorage.setItem("albacook-last-order",o.id)}catch(e){}
+  location.href="koszonjuk.html";
 }
 function showDone(o){
   $("#result").innerHTML=`<div class="ok-head"><span class="stamp">Fizetve</span><h3 style="font-size:24px">Köszönjük a vásárlást!</h3></div>

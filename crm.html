@@ -69,8 +69,8 @@
   </section>
 
   <section data-view="clients" hidden>
-    <div class="toolbar"><div class="f"><label for="c-q">Keresés</label><input id="c-q" placeholder="név, e-mail"></div></div>
-    <div class="tablebox"><table><thead><tr><th>Név</th><th>E-mail</th><th>Telefon</th><th>Szerep</th><th class="num">Rendelés</th><th class="num">Költés</th><th class="num">Aktív utalvány</th><th>Utolsó</th></tr></thead><tbody id="c-rows"></tbody></table></div>
+    <div class="toolbar"><div class="f"><label for="c-q">Keresés</label><input id="c-q" placeholder="név, e-mail"></div><span class="pill active" id="c-news" style="align-self:end;margin-bottom:8px"></span></div>
+    <div class="tablebox"><table><thead><tr><th>Név</th><th>E-mail</th><th>Telefon</th><th>Szerep</th><th>Hírlevél</th><th class="num">Rendelés</th><th class="num">Költés</th><th class="num">Aktív utalvány</th><th>Utolsó</th></tr></thead><tbody id="c-rows"></tbody></table></div>
   </section>
 
   <section data-view="rem" hidden>
@@ -145,15 +145,15 @@ function renderVouchers(){
 }
 function clients(){
   const m={};
-  const add=(mail,name,phone,role,o,spend)=>{const k=(mail||"").toLowerCase(); if(!k)return; const c=m[k]||(m[k]={mail,name,phone:"",roles:new Set(),orders:new Set(),spend:0,active:0,last:o.created});
-    c.roles.add(role); if(phone)c.phone=phone; c.orders.add(o.id); c.spend+=spend; if(o.created>c.last)c.last=o.created;};
+  const add=(mail,name,phone,role,o,spend)=>{const k=(mail||"").toLowerCase(); if(!k)return; const c=m[k]||(m[k]={mail,name,phone:"",roles:new Set(),orders:new Set(),spend:0,active:0,last:o.created,news:null});
+    c.roles.add(role); if(phone)c.phone=phone; if(role==="vásárló"&&o.newsletter&&(!c.news||o.newsletterAt>c.news))c.news=o.newsletterAt; c.orders.add(o.id); c.spend+=spend; if(o.created>c.last)c.last=o.created;};
   db.orders.forEach(o=>{ if(o.status==="failed")return; add(o.cmail,o.cname,o.cphone,"vásárló",o,o.status==="paid"?o.total:0); if(o.rmail.toLowerCase()!==o.cmail.toLowerCase())add(o.rmail,o.rname,"","megajándékozott",o,0);});
   allV().forEach(({o,v})=>{const c=m[o.rmail.toLowerCase()]; if(c&&["active","soon"].includes(vStatus(o,v)))c.active++;});
   return Object.values(m).sort((a,b)=>b.last.localeCompare(a.last));
 }
 function renderClients(){
-  const q=$("#c-q").value.trim().toLowerCase(), cs=clients(); $("#n-clients").textContent=cs.length;
-  $("#c-rows").innerHTML=cs.filter(c=>!q||(c.name+" "+c.mail).toLowerCase().includes(q)).map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.mail)}</td><td class="mono">${esc(c.phone||"–")}</td><td>${[...c.roles].join(", ")}</td><td class="num">${c.orders.size}</td><td class="num">${c.spend?ft(c.spend):"–"}</td><td class="num">${c.active||"–"}</td><td class="mono">${huDate(c.last.slice(0,10))}</td></tr>`).join("");
+  const q=$("#c-q").value.trim().toLowerCase(), cs=clients(); $("#n-clients").textContent=cs.length; $("#c-news").textContent=cs.filter(c=>c.news).length+" hírlevél-feliratkozó";
+  $("#c-rows").innerHTML=cs.filter(c=>!q||(c.name+" "+c.mail).toLowerCase().includes(q)).map(c=>`<tr><td>${esc(c.name)}</td><td>${esc(c.mail)}</td><td class="mono">${esc(c.phone||"–")}</td><td>${[...c.roles].join(", ")}</td><td>${c.news?pill("active","Feliratkozott"):"–"}${c.news?`<div class="small muted">${huDate(c.news.slice(0,10))}</div>`:""}</td><td class="num">${c.orders.size}</td><td class="num">${c.spend?ft(c.spend):"–"}</td><td class="num">${c.active||"–"}</td><td class="mono">${huDate(c.last.slice(0,10))}</td></tr>`).join("");
 }
 function remList(){
   const out=[]; allV().forEach(({o,v})=>{ const [a,b]=reminders(o.buy); [[a,"2 hónapos emlékeztető"],[b,"lejárat előtti emlékeztető"]].forEach(([d,type])=>out.push({date:d,type,o,v})); });
@@ -171,7 +171,7 @@ async function openOrder(id){
   const head=`<div class="dh"><h2>${o.id}</h2>${oPill(o)}<button class="btn ghost small" id="d-close">Bezár</button></div>
    <dl class="bank"><dt>Vásárló</dt><dd>${esc(o.cname)}${o.ctax?` · adószám ${esc(o.ctax)}`:""}</dd><dt>E-mail</dt><dd>${esc(o.cmail)}</dd><dt>Telefon</dt><dd>${esc(o.cphone||"–")}</dd><dt>Cím</dt><dd>${esc(o.caddr||"–")}</dd>
    <dt>Megajándékozott</dt><dd>${esc(o.rname)}, ${esc(o.rmail)}${o.direct?" (neki is elküldve)":""}</dd>${o.msg?`<dt>Üzenet</dt><dd><i>${esc(o.msg)}</i></dd>`:""}
-   <dt>Fizetés</dt><dd>${PAY[o.pay]} · ${ft(o.total)}</dd><dt>Kiállító</dt><dd>${esc(o.issuer)}</dd><dt>Számla</dt><dd class="mono">${esc(o.invoice||"–")}${o.proforma?` (díjbekérő: ${esc(o.proforma)})`:""}</dd></dl>`;
+   <dt>Hírlevél</dt><dd>${o.newsletter?"Feliratkozott ("+huDate(o.newsletterAt.slice(0,10))+")":"Nem kért"}</dd><dt>Fizetés</dt><dd>${PAY[o.pay]} · ${ft(o.total)}</dd><dt>Kiállító</dt><dd>${esc(o.issuer)}</dd><dt>Számla</dt><dd class="mono">${esc(o.invoice||"–")}${o.proforma?` (díjbekérő: ${esc(o.proforma)})`:""}</dd></dl>`;
   let body="";
   if(o.status==="wait") body=`<div class="panel"><h3>Átutalásra vár</h3><p class="hint">Ha megérkezett a pénz, a gomb kiállítja a számlát, legenerálja az utalványt és elküldi e-mailben.</p><button class="btn ok" id="d-paid">Megérkezett az utalás</button></div>`;
   if(o.status==="paid") body=`<div class="sec-t">Utalványok</div><div class="vlist">${o.vouchers.map((v,i)=>{const s=vStatus(o,v),ex=extFee(expiryOf(o.buy),TODAY);
@@ -199,7 +199,7 @@ $("#c-q").addEventListener("input",renderClients);
 $("#s-date").onchange=e=>{if(!e.target.value)return; try{sessionStorage.setItem("albacook-today",e.target.value)}catch(x){} renderAll()};
 $("#s-date-reset").onclick=()=>{try{sessionStorage.removeItem("albacook-today")}catch(x){} renderAll()};
 $("#s-reset").onclick=()=>{db=resetDB(); renderAll(); $("#s-msg").textContent="Visszaállítva.";};
-window.addEventListener("storage",e=>{if(e.key==="albacook-db-v1"&&authed())renderAll()});
+window.addEventListener("storage",e=>{if(e.key==="albacook-db-v2"&&authed())renderAll()});
 window.addEventListener("focus",()=>{if(authed())renderAll()});
 
 if(authed()) showApp();

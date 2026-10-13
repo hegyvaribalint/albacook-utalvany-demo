@@ -41,7 +41,7 @@ const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"
 function today(){ try{const s=sessionStorage.getItem("albacook-today"); if(s) return parse(s);}catch(e){} const t=new Date(); t.setHours(12,0,0,0); return t; }
 
 /* ---- tároló ---- */
-const KEY="albacook-db-v1";
+const KEY="albacook-db-v2";
 function sampleDB(){
   const o=(id,inv,buyer,b,cmail,rname,rmail,buy,items,pay,extra={})=>{
     const total=items.reduce((s,i)=>s+P[i.pid].price*i.q,0), n=items.reduce((s,i)=>s+i.q,0); let k=0; const vouchers=[];
@@ -49,10 +49,10 @@ function sampleDB(){
     return Object.assign({id,created:buy+"T10:12:00",buyerType:b,issuer:ISSUERS[b].name,invoice:inv,status:"paid",items,total,cname:buyer,cmail,rname,rmail,direct:false,msg:"",pay,buy,vouchers,log:[]},extra);
   };
   const orders=[
-    o("R-1001","AAE-2025-0201","Szabó Gábor","mag","gabor.szabo@example.hu","Szabó Eszter","eszter.szabo@example.hu","2025-12-18",[{pid:"steak",q:1}],"card"),
+    o("R-1001","AAE-2025-0201","Szabó Gábor","mag","gabor.szabo@example.hu","Szabó Eszter","eszter.szabo@example.hu","2025-12-18",[{pid:"steak",q:1}],"card",{newsletter:true,newsletterAt:"2025-12-18T10:12:00"}),
     o("R-1002","AAE-2025-0207","Tóth Judit","mag","judit.toth@example.hu","Tóth Bence","bence.toth@example.hu","2025-12-21",[{pid:"v10",q:2}],"apple"),
     o("R-1003","MCK-2026-0009","Példa Bau Kft","ceg","iroda@peldabau.example","Kiss Márton","marton.kiss@example.hu","2026-05-30",[{pid:"paros",q:1}],"transfer"),
-    o("R-1004","AAE-2026-0031","Varga Nóra","mag","nora.varga@example.hu","Varga Nóra","nora.varga@example.hu","2026-07-02",[{pid:"macaron",q:1}],"card"),
+    o("R-1004","AAE-2026-0031","Varga Nóra","mag","nora.varga@example.hu","Varga Nóra","nora.varga@example.hu","2026-07-02",[{pid:"macaron",q:1}],"card",{newsletter:true,newsletterAt:"2026-07-02T10:12:00"}),
     o("R-1005","AAE-2026-0044","Molnár Ádám","mag","adam.molnar@example.hu","Fekete Réka","reka.fekete@example.hu","2026-09-14",[{pid:"sushi",q:1}],"google")
   ];
   orders[1].vouchers[0].status="used"; orders[1].vouchers[0].usedAt="2026-03-07";

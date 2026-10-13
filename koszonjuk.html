@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Köszönjük a vásárlást · Al-Ba Cook</title>
+<link rel="icon" href="img/logo-mark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cabin+Sketch:wght@400;700&family=Karla:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+<!-- MÉRÉS: ide kerül a Google Analytics 4 / Google Ads és a Meta Pixel alapkódja. A vásárlás eseményt lent a "purchase" blokk küldi. -->
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <a class="brand" href="./" style="color:inherit;text-decoration:none"><img src="img/logo-mark.png" alt="Al-Ba Cook logó"><span class="bt"><b>Al-Ba Cook</b><span>Főzőiskola · Székesfehérvár</span></span></a>
+  <span class="test-badge">Tesztüzem</span>
+</div></header>
+<main class="wrap">
+  <div class="hero"><div><h1>Köszönjük a vásárlást!</h1><p id="lead">Az utalványokat és a számlát e-mailben is elküldtük.</p></div></div>
+  <section class="step" style="margin-top:22px"><div id="result" class="result"><p class="muted"><span class="spinner"></span>Utalványok betöltése…</p></div></section>
+  <div class="actions" style="margin-top:20px"><a class="btn" href="./" style="text-decoration:none">Újabb utalvány vásárlása</a><a class="btn ghost" href="https://fozzvelunk.hu" style="text-decoration:none">Időpontfoglalás</a></div>
+  <footer class="foot">
+    <span>Al-Ba Cook Főzőiskola · 8000 Székesfehérvár, Széchenyi utca 122.</span>
+    <a href="feltetelek.html" style="color:inherit">Utalvány felhasználási feltételei</a>
+    <a href="aszf.html" style="color:inherit">ÁSZF</a>
+    <a href="adatkezeles.html" style="color:inherit">Adatkezelési tájékoztató</a>
+    <a href="impresszum.html" style="color:inherit">Impresszum</a>
+  </footer>
+</main>
+<script src="app.js"></script>
+<script>
+const {P,ft,huDate,expiryOf,esc,load,drawVoucher}=AB;
+(async()=>{
+  let id=null; try{id=sessionStorage.getItem("albacook-last-order")}catch(e){}
+  const o=id&&load().orders.find(x=>x.id===id&&x.status==="paid");
+  const box=document.getElementById("result");
+  if(!o){box.innerHTML=`<p>A rendelés részleteit e-mailben elküldtük. Kérdés esetén hívj minket: 06 30 220 5547.</p>`;return}
+  document.getElementById("lead").innerHTML=`Elküldtük a számlát és ${o.vouchers.length>1?"az utalványokat":"az utalványt"} a(z) <b>${esc(o.cmail)}</b> címre${o.direct?`, és egy példányt ${esc(o.rname)} részére is`:""}. Beváltható <b>${huDate(expiryOf(o.buy))}</b>-ig.`;
+  for(const v of o.vouchers) v.url=await drawVoucher(v.pid,v.serial,expiryOf(o.buy));
+  box.innerHTML=`<p class="mono" style="margin:0">Számla: ${esc(o.invoice)} · ${ft(o.total)}</p>
+    <div class="vouchers">${o.vouchers.map(v=>`<figure><img src="${v.url}" alt="${esc(P[v.pid].name)} utalvány, sorszám ${esc(v.serial)}"><figcaption><span class="mono">${esc(v.serial)}</span><span class="muted">${esc(P[v.pid].name)}</span></figcaption></figure>`).join("")}</div>
+    <p class="hint" style="margin:0">Időpontot a fozzvelunk.hu oldalon vagy a 06 30 220 5547 számon foglalhatsz, a sorszám megadásával.</p>`;
+  /* purchase esemény (egyszer rendelésenként) */
+  let sent=false; try{sent=sessionStorage.getItem("albacook-tracked-"+o.id)}catch(e){}
+  if(!sent){
+    const items=o.vouchers.map(v=>({item_id:v.pid,item_name:P[v.pid].name,price:v.value,quantity:1}));
+    window.dataLayer=window.dataLayer||[]; window.dataLayer.push({event:"purchase",ecommerce:{transaction_id:o.invoice,value:o.total,currency:"HUF",items}});
+    if(typeof gtag==="function") gtag("event","purchase",{transaction_id:o.invoice,value:o.total,currency:"HUF",items});
+    if(typeof fbq==="function") fbq("track","Purchase",{value:o.total,currency:"HUF"});
+    try{sessionStorage.setItem("albacook-tracked-"+o.id,"1")}catch(e){}
+  }
+})();
+</script>
+</body>
+</html>
